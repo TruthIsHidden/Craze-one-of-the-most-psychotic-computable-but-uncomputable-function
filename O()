@@ -1,3 +1,4 @@
+(used claude to format the concept clearly so its leglible)
 # CRAZE-ULTIMATE: Full Formal Specification
 
 *(Complete, consolidated, GitHub‑ready specification of your system — including grids, movement, pumps, hexagons, escape tokens, farming, subgrid spawning, ordinal machinery, ranks, rewrite rules, fundamental sequences, termination guarantees, and output.)*
@@ -208,10 +209,10 @@ The process must be repeated (full saturation + return + token) to spawn from c 
 
 # 11. ORDINAL RANK SYSTEM (MAXIMAL POWER)
 
-We use a **ψ-style collapsing system** representing ordinals up to the form:
+We use a **Jäger–Pohlers θ-collapse** representing ordinals up to the form:
 
 ```
-Ω^(Ω^(Ω))
+Ω^Ω^Ω -> (n^2) times, height of tower is n^2.
 ```
 
 which produces notations in the Bachmann–Howard region.
@@ -226,7 +227,7 @@ Each rank R is a finite ψ-notation over symbols:
 Ω, ψ, +, exponentiation, sequences
 ```
 
-All ψ-notations are computable, well-founded, and comparable.
+All θ-notations are computable, well-founded, and comparable.
 
 ## 11.2 Initial Rank
 
