@@ -1,357 +1,418 @@
-(used claude to format the concept clearly so its leglible)
-# CRAZE-ULTIMATE: Full Formal Specification
+(used claude to format it well, so its legible and clear)
 
-*(Complete, consolidated, GitHub‑ready specification of your system — including grids, movement, pumps, hexagons, escape tokens, farming, subgrid spawning, ordinal machinery, ranks, rewrite rules, fundamental sequences, termination guarantees, and output.)*
+# CRAZE-ULTIMATE: Complete Formal Specification
 
----
+Input: A natural number n, where n ≥ 1
 
-# 1. INPUT
-
-```
-Input: n ∈ ℕ, n ≥ 1
-```
-
-The system builds a main grid of size determined by n, supports spawning subgrids, and evolves through deterministic rules until no legal moves remain.
+The system constructs a main grid whose size is determined by n, supports spawning 
+subgrids recursively, and evolves through deterministic rules until no legal moves 
+remain.
 
 ---
 
-# 2. MAIN GRID CONSTRUCTION
+## 1. MAIN GRID CONSTRUCTION
 
-Let:
+Let S_main = n^(n^2)
+Let N_main = S_main × S_main
 
-```
-S_main = n^(n^2)
-N_main = S_main × S_main
-```
+Construct a square grid G₁ (the main grid) with:
+- Side length = S_main
+- Total cells = N_main
+- Initial cell values = 0
 
-Construct a square grid G₁ (the **main grid**) with:
-
-```
-• Side length  = S_main
-• Total cells  = N_main
-• Initial cell values = 0
-```
-
-A **token** (player position) begins on any chosen cell.
+A token (player position) begins on any chosen starting cell.
 
 ---
 
-# 3. GLOBAL PARAMETERS
+## 2. GLOBAL PARAMETERS
 
-```
-Teleport period            = 6 moves
-Pump period (main)         = every n moves
-Pump period (subgrid k)    = every floor(n / k) moves (if ≥ 1)
-Anti-backtrack window      = last floor(N_G / 2) distinct visited cells
-Concurrency limit L        = n^2 + 1 active subgrids (BLOCK policy)
-Spawn cost                 = 1 escape token
-Value wrap                 = modulo (n+1)
-Generation cap cap(k)      = floor(n^2 / k)
-```
+- Teleport period = every 6 moves (forced)
+- Teleport limit per cell = n teleports maximum per cell
+- Pump period (main grid) = every n moves
+- Pump period (subgrid generation k) = every floor(n / k) moves (if ≥ 1)
+- Anti-backtrack window = last floor(N_G / 2) distinct visited cells
+- Concurrency limit L = n^2 + 1 active subgrids (BLOCK policy when exceeded)
+- Spawn cost = 1 escape token
+- Value wrapping = modulo (n+1), values cycle through {0, 1, 2, ..., n}
+- Generation cap = floor(n^2 / k) for generation k
 
-All rules apply identically to the main grid and subgrids unless explicitly stated otherwise.
-
----
-
-# 4. MOVEMENT RULES
-
-## Allowed directions
-
-```
-North, South, East, West
-```
-
-## Move lengths
-
-```
-• 1-step  → arrival cell +1
-• 2-step  → arrival cell +2
-```
-
-Wrapping applies: cell values cycle through `{0,1,...,n}`.
-
-## Bounds
-
-Token cannot move outside the grid.
+All movement and mechanics rules apply identically to both main grid and subgrids 
+unless explicitly stated otherwise.
 
 ---
 
-# 5. PUMPS
+## 3. CELL VALUES AND WRAPPING
 
-## Main Grid Pump
+Each cell holds a value in the range {0, 1, 2, ..., n}.
 
-Every time the main grid’s internal move counter `t_main` satisfies:
+When a cell value would exceed n, it wraps around:
+- (current_value + increment) mod (n+1)
 
-```
-t_main mod n == 0
-```
-
-The player may choose **one** cell and add `+1` or `+2` (with wrap).
-
-## Subgrid Pump
-
-For a subgrid of generation k, with move counter `t_k`:
-
-```
-if floor(n/k) ≥ 1 and t_k mod floor(n/k) == 0:
-    player may add +1 or +2 to any cell
-```
-
-Subgrids with `floor(n/k) = 0` have **no pumps**.
+Example with n=5: cell at value 5, receiving +2 becomes (5+2) mod 6 = 1
 
 ---
 
-# 6. ANTI-BACKTRACKING RULE
+## 4. MOVEMENT RULES
 
-If the token moves A → B, it cannot return to A until it has visited at least:
+### Allowed Directions
+North, South, East, West (no diagonal movement)
 
-```
-floor(N_G / 2) distinct other cells
-```
+### Move Types and Effects
 
-This applies to steps, jumps, and transports.
+1-step move: 
+  - Move token to adjacent cell in chosen direction
+  - Arrival cell value increases by 1 (with wrapping)
 
----
+2-step move:
+  - Move token two cells in chosen direction
+  - Arrival cell value increases by 2 (with wrapping)
 
-# 7. TRANSPORT (TELEPORT-LIKE MOVE)
-
-At any time, the player may transport to **any** cell not visited in the last `floor(N_G/2)` moves.
-
-Transport:
-
-```
-• counts as a move
-• does NOT change cell values
-```
+### Grid Boundaries
+The token cannot move outside the grid boundaries. Moves that would exit the 
+grid are illegal.
 
 ---
 
-# 8. PERIODIC TELEPORTATION
+## 5. PUMPS (OPTIONAL BONUS ACTIONS)
 
-Every 6 moves, the token is forcibly moved to the **inverse coordinate**:
+Pumps are optional periodic bonuses that allow the player to increase any cell's 
+value without moving to it.
 
-```
-(r, c) → (S_G - 1 - r,  S_G - 1 - c)
-```
+### Main Grid Pump
+When the main grid's internal move counter t_main satisfies:
+  t_main mod n = 0
 
-This:
+The player MAY choose one cell and add +1 or +2 to it (with wrapping).
+Using the pump is optional.
 
-```
-• does not change cell values
-• does not consume tokens
-• does not reset anti-backtracking
-```
+### Subgrid Pump
+For a subgrid of generation k, with move counter t_k:
 
----
+If floor(n/k) ≥ 1 and t_k mod floor(n/k) = 0:
+  The player MAY choose one cell and add +1 or +2 to it (with wrapping)
 
-# 9. HEXAGON FORMATION & ESCAPE TOKENS
-
-A **hexagon** is a closed loop of exactly 6 moves visiting 6 distinct cells and returning to the start.
-
-Forming a hexagon in a grid yields:
-
-```
-+1 escape token (to that grid only)
-```
-
-Spawned subgrids **do not** generate hexagon tokens unless explicitly allowed. (Default: **no token** generation in subgrids.)
-
-Tokens accumulate and do not expire.
+Subgrids where floor(n/k) = 0 have no pump capability.
 
 ---
 
-# 10. SPAWNING SUBGRIDS (GRID-AS-BLOCK FARMING)
+## 6. ANTI-BACKTRACKING RULE
 
-A grid G of side S_G contains S_G² cells. Each cell may produce **one** associated child subgrid **after** the following sequence is completed.
+If the token moves from cell A to cell B, it cannot immediately return to cell A.
 
-## 10.1 Full-Saturation Requirement
+To return to A, the token must first visit at least floor(N_G / 2) distinct other 
+cells, where N_G is the total number of cells in the current grid.
 
-To re-arm cell c for spawning:
+This rule applies to:
+- Normal movement (1-step and 2-step)
+- Jump moves
+- Transport moves
 
-```
-Every cell in G must reach value n (full saturation).
-```
-
-Due to wrapping, the player ensures all cells have value exactly n.
-
-## 10.2 Return-to-Origin Requirement
-
-After full saturation, the player must **return** the token to cell c.
-
-## 10.3 Escape Token Cost
-
-Triggering c’s spawn consumes:
-
-```
-1 escape token
-```
-
-## 10.4 Subgrid Creation
-
-When triggered:
-
-```
-• Create new subgrid H (side = n; all cell values = 0)
-• Assign generation index: H.k = G.k + 1
-• Assign H an ordinal rank R_child (see Section 11)
-• Apply concurrency limit L (BLOCK if full)
-```
-
-## 10.5 Re-arming
-
-After spawning from c:
-
-```
-The process must be repeated (full saturation + return + token) to spawn from c again.
-```
+This rule does NOT apply to:
+- Periodic teleportation (forced every 6 moves)
 
 ---
 
-# 11. ORDINAL RANK SYSTEM (MAXIMAL POWER)
+## 7. TRANSPORT MOVE (VOLUNTARY LONG-RANGE MOVEMENT)
 
-We use a **Jäger–Pohlers θ-collapse** representing ordinals up to the form:
+At any time, the player may transport the token to any cell that:
+- Has never been visited before in this grid
 
-```
-Ω^Ω^Ω -> (n^2) times, height of tower is n^2.
-```
-
-which produces notations in the Bachmann–Howard region.
-
-This gives CRAZE-ULTIMATE extraordinarily high proof-theoretic strength while remaining fully **computable**.
-
-## 11.1 Representation
-
-Each rank R is a finite ψ-notation over symbols:
-
-```
-Ω, ψ, +, exponentiation, sequences
-```
-
-All θ-notations are computable, well-founded, and comparable.
-
-## 11.2 Initial Rank
-
-For the main grid:
-
-```
-R_main = ψ( Ω^( Ω^( Ω ) ) )
-```
-
-This is the default "ultimate" ordinal fuel.
-
-## 11.3 Spawn Event → Ordinal Rewrite
-
-Whenever grid G successfully spawns a child:
-
-### Step 1 — Compute index m(G)
-
-```
-m(G) = 1 + (#spawns_by_G mod M)
-```
-
-with:
-
-```
-M = 3 + (n mod 5)
-```
-
-### Step 2 — Rewrite Parent Rank
-
-Let R = R_G.
-
-If R is a **successor ordinal**:
-
-```
-R_G := predecessor(R)
-```
-
-If R is a **limit ordinal**:
-
-```
-R_G := fundamental_sequence(R)[ m(G) ]
-```
-
-Using standard ψ-based fundamental sequences.
-
-### Step 3 — Child Rank Assignment
-
-Let R_G_new be the new parent rank. Then:
-
-```
-• Extract its leftmost principal component as R_child
-• Set R_G := R_G_new minus that component
-• Ensure R_child < original R
-```
-
-### Step 4 — Rank Exhaustion
-
-If R_G becomes 0, G can spawn no further subgrids.
+Transport moves:
+- Count as one move toward the move counter
+- Do NOT change any cell values
+- Are subject to anti-backtracking (cannot transport back to recently visited cells)
 
 ---
 
-# 12. SUBGRID BEHAVIOR
+## 8. PERIODIC TELEPORTATION (FORCED EVERY 6 MOVES)
 
-Each subgrid H:
+Every 6 moves (when move counter mod 6 = 0), the token is forcibly teleported to 
+the inverse coordinate:
 
-```
-• is an independent n×n grid
-• has its own token position
-• obeys movement, pumps, teleports, anti-backtracking
-• DOES NOT generate hexagon tokens (default)
-```
+  (row, col) → (S_G - 1 - row, S_G - 1 - col)
 
-Subgrids may create **their own** subgrids if:
+Where S_G is the side length of the current grid.
 
-```
-• They have tokens (if allowed)
-• They satisfy full saturation + return
-• Their rank R_H > 0
-```
+Periodic teleportation:
+- Does NOT change any cell values
+- Does NOT consume escape tokens
+- Does NOT reset the anti-backtracking memory
+- Counts as a move
+- Is mandatory and automatic
+
+### Teleport Usage Limit
+Each cell can be teleported TO a maximum of n times (across all teleport types).
+Once a cell has been the destination of n teleports, it cannot be teleported to again.
 
 ---
 
-# 13. TERMINATION OF THE SYSTEM
+## 9. HEXAGON FORMATION AND ESCAPE TOKENS
 
-The entire system terminates when:
+A hexagon is a closed loop consisting of exactly 6 moves that:
+- Visits exactly 6 distinct cells
+- Returns to the starting cell on the 6th move
+- Forms a complete cycle
 
-```
-• Every active grid has no legal moves AND no escape tokens
-• OR all grids have rank 0 so further spawns are impossible
-```
+### Token Generation
+When a hexagon is successfully formed in any grid (main or subgrid):
+- That grid receives +1 escape token
+- The token is local to that specific grid only
+- Tokens do not transfer between grids
 
-Since each spawn strictly decreases a ψ-ordinal and ψ-notations are well-founded:
+### Token Properties
+- Escape tokens accumulate and do not expire
+- Tokens are spent to spawn subgrids (see Section 10)
+- Each grid maintains its own token count independently
 
-```
-Termination is guaranteed.
-```
+---
+
+## 10. SPAWNING SUBGRIDS (BLOCK FARMING)
+
+"Block farming" refers to treating an entire grid as a single unit that must be 
+fully saturated before spawning subgrids from it.
+
+Each cell in a grid can produce one associated child subgrid, but only after 
+completing a specific sequence.
+
+### Requirements to Spawn from a Cell
+
+To spawn a subgrid from cell c in grid G, ALL of the following must be satisfied:
+
+1. FULL SATURATION REQUIREMENT
+   Every cell in grid G must reach value n (maximum value).
+   Due to wrapping mechanics, the player must carefully coordinate to ensure all 
+   cells have value exactly n simultaneously.
+
+2. RETURN-TO-ORIGIN REQUIREMENT
+   After achieving full saturation, the token must return to cell c (the cell 
+   from which you want to spawn).
+
+3. ESCAPE TOKEN COST
+   The grid G must have at least 1 escape token available.
+   Triggering the spawn consumes exactly 1 escape token from G.
+
+4. RANK REQUIREMENT
+   The grid G must have ordinal rank R_G > 0.
+
+5. CONCURRENCY LIMIT
+   The total number of active grids must be less than L = n^2 + 1.
+   If the limit is reached, spawning is blocked until other grids terminate.
+
+### Subgrid Creation Process
+
+When all requirements are met and the spawn is triggered:
+
+1. Create new subgrid H with:
+   - Side length = n
+   - Total cells = n²
+   - All cell values initialized to 0
+   - Token starts at a chosen cell
+
+2. Assign generation index: H.k = G.k + 1
+   (Main grid has k = 1, its children have k = 2, etc.)
+
+3. Assign ordinal rank R_H to the child (see Section 11)
+
+4. Update parent's ordinal rank according to rewrite rules (see Section 11)
+
+5. The child grid H becomes active and independent
+
+### Re-arming a Cell for Future Spawns
+
+After spawning from cell c, that cell is "exhausted."
+
+To spawn from cell c again, the entire process must be repeated:
+- Achieve full saturation of all cells again
+- Return token to cell c again
+- Spend another escape token
+
+Each cell can produce multiple subgrids if the requirements are met repeatedly.
+
+---
+
+## 11. ORDINAL RANK SYSTEM (PROOF-THEORETIC STRENGTH)
+
+The system uses ordinal ranks based on Jäger-Pohlers θ-collapse notation to ensure 
+termination. The ordinals reach up to:
+
+  ψ(Ω^(Ω^(Ω^...)))  with tower height = n^2
+
+This places CRAZE-ULTIMATE in the Bachmann-Howard ordinal range, giving it 
+extraordinary proof-theoretic strength while remaining fully computable.
+
+### Ordinal Representation
+
+Each rank R is a finite notation using:
+- ψ (psi function, ordinal collapsing)
+- Ω (uncountable ordinal)
+- Standard ordinal arithmetic (addition, exponentiation)
+- Well-founded sequences
+
+All ordinals are:
+- Computable
+- Comparable
+- Well-founded (guaranteeing termination)
+
+### Initial Rank Assignment
+
+The main grid G₁ begins with rank:
+
+  R_main = ψ(Ω^(Ω^Ω))
+
+This is the "ultimate" starting fuel that enables deep recursion.
+
+### Ordinal Rewrite Rules on Spawn
+
+Whenever grid G successfully spawns a child subgrid, the following ordinal 
+transformations occur:
+
+STEP 1: Compute spawn index m(G)
+
+  m(G) = 1 + (number_of_spawns_by_G mod M)
+
+  Where M = 3 + (n mod 5)
+
+This gives a value m(G) in the range [1, M].
+
+STEP 2: Rewrite parent rank
+
+Let R_old = current rank of parent G.
+
+If R_old is a successor ordinal (has immediate predecessor):
+  R_new = predecessor(R_old)
+
+If R_old is a limit ordinal (no immediate predecessor):
+  R_new = fundamental_sequence(R_old)[m(G)]
+
+The fundamental sequence for limit ordinals follows standard ψ-based definitions 
+for ordinal notations in the Bachmann-Howard range.
+
+STEP 3: Assign child rank
+
+The child subgrid receives:
+  R_child = R_new
+
+The parent's rank is then further reduced:
+
+If R_new is a successor ordinal:
+  R_G = predecessor(R_new)
+
+If R_new is a limit ordinal:
+  R_G = fundamental_sequence(R_new)[1]
+
+This ensures: R_child < R_old (strict descent in well-founded ordinals)
+
+STEP 4: Check for rank exhaustion
+
+If R_G reaches 0:
+  Grid G can spawn no further subgrids
+  G can still make moves and form hexagons
+
+---
+
+## 12. SUBGRID BEHAVIOR
+
+Each subgrid H operates as an independent grid system with:
+
+- Its own n × n grid structure
+- Its own token position
+- Its own move counter
+- Its own escape token count
+- Its own ordinal rank
+
+Subgrids obey all the same rules as the main grid:
+- Movement rules (1-step, 2-step)
+- Pumps (with period floor(n/k) for generation k)
+- Periodic teleportation (every 6 moves)
+- Anti-backtracking
+- Hexagon formation (generates tokens for that subgrid)
+- Transport moves
+- Teleport usage limits (n times per cell)
+
+### Recursive Spawning
+
+Subgrids can spawn their own child subgrids if:
+- They have at least 1 escape token
+- They achieve full saturation (all cells = n)
+- Token returns to the desired spawn cell
+- Their ordinal rank > 0
+- Concurrency limit is not exceeded
+
+This creates a recursive tree structure of grids, limited by:
+- Ordinal rank descent (guarantees termination)
+- Generation cap: floor(n² / k) for generation k
+- Concurrency limit: maximum n² + 1 active grids
+
+---
+
+## 13. TERMINATION CONDITIONS
+
+The entire CRAZE-ULTIMATE system terminates when EITHER:
+
+CONDITION A: Global Stalemate
+  Every active grid simultaneously has:
+  - No legal moves available AND
+  - Zero escape tokens remaining
+
+CONDITION B: Rank Exhaustion
+  All active grids have ordinal rank = 0, making further spawns impossible, AND
+  All grids have no legal moves
+
+### Termination Guarantee
+
+Termination is mathematically guaranteed because:
+
+1. Each spawn event strictly decreases ordinal ranks via well-founded descent
+2. Ordinal ranks are taken from a well-founded system (ψ-notations)
+3. Well-founded ordinals cannot descend infinitely
+4. Once all ranks reach 0, no new grids can spawn
+5. Each individual grid has finite size and finite moves
 
 Proving termination requires transfinite induction up to:
 
-```
-ψ(Ω^(Ω^(Ω)))
-```
+  ψ(Ω^(Ω^Ω))
 
 ---
 
-# 14. OUTPUT VALUE
+## 14. LEGAL MOVES
 
-After the entire process ends:
+A move is legal if and only if:
 
-Let:
+1. It does not violate grid boundaries
+2. It does not violate anti-backtracking (destination not in recent floor(N_G/2) cells)
+3. For transport: destination has never been visited
+4. For teleport: destination has been teleported to fewer than n times
+5. The move type is permitted (step, jump, transport, or forced teleportation)
 
-```
-M_total   = total number of moves across ALL grids
-S_total   = sum of all cell values across ALL grids
-```
+A grid has "no legal moves" when:
+- All possible movements violate one of the above conditions
+- AND no escape tokens are available for spawning
+- AND no hexagons can be formed
+
+---
+
+## 15. OUTPUT VALUE CALCULATION
+
+After the entire system terminates (all grids stopped), compute:
+
+M_total = total number of moves made across ALL grids (main + all subgrids)
+
+S_total = sum of all cell values across ALL grids at termination
 
 The final output of CRAZE-ULTIMATE(n) is:
 
-```
-CRAZE_ULTIMATE(n) = [ M_total ]^( S_total! )
-```
+  CRAZE-ULTIMATE(n) = M_total ^ (S_total!)
 
-This number is finite, computable, and astronomically large.
+Where:
+- ^ denotes exponentiation
+- ! denotes factorial
+- S_total! = S_total × (S_total - 1) × (S_total - 2) × ... × 2 × 1
+
+This output is:
+- Finite (termination guaranteed)
+- Computable (all operations are algorithmic)
+- Astronomically large (grows faster than busy beaver for small n)
 
 ---
 
-# END OF SPEC
+# END OF SPECIFICATION
