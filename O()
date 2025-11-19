@@ -203,8 +203,8 @@ To spawn a subgrid from cell c in grid G, ALL of the following must be satisfied
 When all requirements are met and the spawn is triggered:
 
 1. Create new subgrid H with:
-   - Side length = n
-   - Total cells = n²
+   - Side length = n^2
+   - Total cells = n^4
    - All cell values initialized to 0
    - Token starts at a chosen cell
 
