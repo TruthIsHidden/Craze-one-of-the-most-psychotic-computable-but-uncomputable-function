@@ -1,0 +1,356 @@
+# CRAZE-ULTIMATE: Full Formal Specification
+
+*(Complete, consolidated, GitHub‑ready specification of your system — including grids, movement, pumps, hexagons, escape tokens, farming, subgrid spawning, ordinal machinery, ranks, rewrite rules, fundamental sequences, termination guarantees, and output.)*
+
+---
+
+# 1. INPUT
+
+```
+Input: n ∈ ℕ, n ≥ 1
+```
+
+The system builds a main grid of size determined by n, supports spawning subgrids, and evolves through deterministic rules until no legal moves remain.
+
+---
+
+# 2. MAIN GRID CONSTRUCTION
+
+Let:
+
+```
+S_main = n^(n^2)
+N_main = S_main × S_main
+```
+
+Construct a square grid G₁ (the **main grid**) with:
+
+```
+• Side length  = S_main
+• Total cells  = N_main
+• Initial cell values = 0
+```
+
+A **token** (player position) begins on any chosen cell.
+
+---
+
+# 3. GLOBAL PARAMETERS
+
+```
+Teleport period            = 6 moves
+Pump period (main)         = every n moves
+Pump period (subgrid k)    = every floor(n / k) moves (if ≥ 1)
+Anti-backtrack window      = last floor(N_G / 2) distinct visited cells
+Concurrency limit L        = n^2 + 1 active subgrids (BLOCK policy)
+Spawn cost                 = 1 escape token
+Value wrap                 = modulo (n+1)
+Generation cap cap(k)      = floor(n^2 / k)
+```
+
+All rules apply identically to the main grid and subgrids unless explicitly stated otherwise.
+
+---
+
+# 4. MOVEMENT RULES
+
+## Allowed directions
+
+```
+North, South, East, West
+```
+
+## Move lengths
+
+```
+• 1-step  → arrival cell +1
+• 2-step  → arrival cell +2
+```
+
+Wrapping applies: cell values cycle through `{0,1,...,n}`.
+
+## Bounds
+
+Token cannot move outside the grid.
+
+---
+
+# 5. PUMPS
+
+## Main Grid Pump
+
+Every time the main grid’s internal move counter `t_main` satisfies:
+
+```
+t_main mod n == 0
+```
+
+The player may choose **one** cell and add `+1` or `+2` (with wrap).
+
+## Subgrid Pump
+
+For a subgrid of generation k, with move counter `t_k`:
+
+```
+if floor(n/k) ≥ 1 and t_k mod floor(n/k) == 0:
+    player may add +1 or +2 to any cell
+```
+
+Subgrids with `floor(n/k) = 0` have **no pumps**.
+
+---
+
+# 6. ANTI-BACKTRACKING RULE
+
+If the token moves A → B, it cannot return to A until it has visited at least:
+
+```
+floor(N_G / 2) distinct other cells
+```
+
+This applies to steps, jumps, and transports.
+
+---
+
+# 7. TRANSPORT (TELEPORT-LIKE MOVE)
+
+At any time, the player may transport to **any** cell not visited in the last `floor(N_G/2)` moves.
+
+Transport:
+
+```
+• counts as a move
+• does NOT change cell values
+```
+
+---
+
+# 8. PERIODIC TELEPORTATION
+
+Every 6 moves, the token is forcibly moved to the **inverse coordinate**:
+
+```
+(r, c) → (S_G - 1 - r,  S_G - 1 - c)
+```
+
+This:
+
+```
+• does not change cell values
+• does not consume tokens
+• does not reset anti-backtracking
+```
+
+---
+
+# 9. HEXAGON FORMATION & ESCAPE TOKENS
+
+A **hexagon** is a closed loop of exactly 6 moves visiting 6 distinct cells and returning to the start.
+
+Forming a hexagon in a grid yields:
+
+```
++1 escape token (to that grid only)
+```
+
+Spawned subgrids **do not** generate hexagon tokens unless explicitly allowed. (Default: **no token** generation in subgrids.)
+
+Tokens accumulate and do not expire.
+
+---
+
+# 10. SPAWNING SUBGRIDS (GRID-AS-BLOCK FARMING)
+
+A grid G of side S_G contains S_G² cells. Each cell may produce **one** associated child subgrid **after** the following sequence is completed.
+
+## 10.1 Full-Saturation Requirement
+
+To re-arm cell c for spawning:
+
+```
+Every cell in G must reach value n (full saturation).
+```
+
+Due to wrapping, the player ensures all cells have value exactly n.
+
+## 10.2 Return-to-Origin Requirement
+
+After full saturation, the player must **return** the token to cell c.
+
+## 10.3 Escape Token Cost
+
+Triggering c’s spawn consumes:
+
+```
+1 escape token
+```
+
+## 10.4 Subgrid Creation
+
+When triggered:
+
+```
+• Create new subgrid H (side = n; all cell values = 0)
+• Assign generation index: H.k = G.k + 1
+• Assign H an ordinal rank R_child (see Section 11)
+• Apply concurrency limit L (BLOCK if full)
+```
+
+## 10.5 Re-arming
+
+After spawning from c:
+
+```
+The process must be repeated (full saturation + return + token) to spawn from c again.
+```
+
+---
+
+# 11. ORDINAL RANK SYSTEM (MAXIMAL POWER)
+
+We use a **ψ-style collapsing system** representing ordinals up to the form:
+
+```
+Ω^(Ω^(Ω))
+```
+
+which produces notations in the Bachmann–Howard region.
+
+This gives CRAZE-ULTIMATE extraordinarily high proof-theoretic strength while remaining fully **computable**.
+
+## 11.1 Representation
+
+Each rank R is a finite ψ-notation over symbols:
+
+```
+Ω, ψ, +, exponentiation, sequences
+```
+
+All ψ-notations are computable, well-founded, and comparable.
+
+## 11.2 Initial Rank
+
+For the main grid:
+
+```
+R_main = ψ( Ω^( Ω^( Ω ) ) )
+```
+
+This is the default "ultimate" ordinal fuel.
+
+## 11.3 Spawn Event → Ordinal Rewrite
+
+Whenever grid G successfully spawns a child:
+
+### Step 1 — Compute index m(G)
+
+```
+m(G) = 1 + (#spawns_by_G mod M)
+```
+
+with:
+
+```
+M = 3 + (n mod 5)
+```
+
+### Step 2 — Rewrite Parent Rank
+
+Let R = R_G.
+
+If R is a **successor ordinal**:
+
+```
+R_G := predecessor(R)
+```
+
+If R is a **limit ordinal**:
+
+```
+R_G := fundamental_sequence(R)[ m(G) ]
+```
+
+Using standard ψ-based fundamental sequences.
+
+### Step 3 — Child Rank Assignment
+
+Let R_G_new be the new parent rank. Then:
+
+```
+• Extract its leftmost principal component as R_child
+• Set R_G := R_G_new minus that component
+• Ensure R_child < original R
+```
+
+### Step 4 — Rank Exhaustion
+
+If R_G becomes 0, G can spawn no further subgrids.
+
+---
+
+# 12. SUBGRID BEHAVIOR
+
+Each subgrid H:
+
+```
+• is an independent n×n grid
+• has its own token position
+• obeys movement, pumps, teleports, anti-backtracking
+• DOES NOT generate hexagon tokens (default)
+```
+
+Subgrids may create **their own** subgrids if:
+
+```
+• They have tokens (if allowed)
+• They satisfy full saturation + return
+• Their rank R_H > 0
+```
+
+---
+
+# 13. TERMINATION OF THE SYSTEM
+
+The entire system terminates when:
+
+```
+• Every active grid has no legal moves AND no escape tokens
+• OR all grids have rank 0 so further spawns are impossible
+```
+
+Since each spawn strictly decreases a ψ-ordinal and ψ-notations are well-founded:
+
+```
+Termination is guaranteed.
+```
+
+Proving termination requires transfinite induction up to:
+
+```
+ψ(Ω^(Ω^(Ω)))
+```
+
+---
+
+# 14. OUTPUT VALUE
+
+After the entire process ends:
+
+Let:
+
+```
+M_total   = total number of moves across ALL grids
+S_total   = sum of all cell values across ALL grids
+```
+
+The final output of CRAZE-ULTIMATE(n) is:
+
+```
+CRAZE_ULTIMATE(n) = [ M_total ]^( S_total! )
+```
+
+This number is finite, computable, and astronomically large.
+
+---
+
+# END OF SPEC
