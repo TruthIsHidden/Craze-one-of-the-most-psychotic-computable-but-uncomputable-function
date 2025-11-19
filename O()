@@ -6,7 +6,7 @@ Input: A natural number n, where n ≥ 1
 
 The system constructs a main grid whose size is determined by n, supports spawning 
 subgrids recursively, and evolves through deterministic rules until no legal moves 
-remain.
+remain(The goal is the longest, valid sequence to survive for as long as possible).
 
 ---
 
@@ -395,7 +395,7 @@ A grid has "no legal moves" when:
 
 After the entire system terminates (all grids stopped), compute:
 
-M_total = total number of moves made across ALL grids (main + all subgrids)
+M_total = total number of moves made across ALL grids (main + all subgrids) -> (its supposed to be the longest possible valid sequence of moves, not shortest, only the LONGEST possible, as in stall for a long time)
 
 S_total = sum of all cell values across ALL grids at termination
 
