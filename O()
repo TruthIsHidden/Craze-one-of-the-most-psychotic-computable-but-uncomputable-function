@@ -401,7 +401,8 @@ S_total = sum of all cell values across ALL grids at termination
 
 The final output of CRAZE-ULTIMATE(n) is:
 
-  CRAZE-ULTIMATE(n) = (M_total ^ (S_total!)).. Repeated n times.. so CRAZE-ULTIMATE(n) produces an initial value, lets call it x, its passed into the function again and since n is 2 here, after its passed one more time done, thats the final value.
+  G(n) = (M_total ^ (S_total!)),
+  CRAZE-ULTIMATE(n) or OZ(n) is G(G(G(..G(n)..) n^2 times.. so if n is 2, OZ(2) = G(G(2)).
 
 Where:
 - ^ denotes exponentiation
