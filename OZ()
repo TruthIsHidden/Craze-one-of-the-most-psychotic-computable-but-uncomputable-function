@@ -34,6 +34,7 @@ A token (player position) begins on any chosen starting cell.
 - Concurrency limit L = n^2 + 1 active subgrids (BLOCK policy when exceeded)
 - Spawn cost = 1 escape token
 - Value wrapping = modulo (n+1), values cycle through {0, 1, 2, ..., n}
+- Every time where its said "a" subgrid is formed it means n^2 subgrids are formed, the only thing is, all the "n" formed subgrids have the same ordinal rank.
 
 All movement and mechanics rules apply identically to both main grid and subgrids 
 unless explicitly stated otherwise.
