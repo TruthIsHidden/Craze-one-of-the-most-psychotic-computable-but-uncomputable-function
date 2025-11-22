@@ -396,12 +396,12 @@ A grid has "no legal moves" when:
 After the entire system terminates (all grids stopped), compute:
 
 M_total = total number of moves made across ALL grids (main + all subgrids) -> (its supposed to be the longest possible valid sequence of moves, not shortest, only the LONGEST possible, as in stall for a long time)
-
+POSSIBLE = all the no of states/configurations the game can have, even those which are practically unable to reach but theoretically plausible under the rules, including those with subgrids, differet values for grid, etc, all the possible states.
 S_total = sum of all cell values across ALL grids at termination
 
 The final output of CRAZE-ULTIMATE(n) is:
 
-  G(n) = (M_total ^ (S_total!)),
+  G(n) = ((POSSIBLE * M_total) ^ (S_total!)),
   CRAZE-ULTIMATE(n) or OZ(n) is G(G(G(..G(n)..) n^2 times.. so if n is 2, OZ(2) = G(G(2)).
 
 Where:
