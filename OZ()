@@ -34,7 +34,6 @@ A token (player position) begins on any chosen starting cell.
 - Concurrency limit L = n^2 + 1 active subgrids (BLOCK policy when exceeded)
 - Spawn cost = 1 escape token
 - Value wrapping = modulo (n+1), values cycle through {0, 1, 2, ..., n}
-- Generation cap = floor(n^2 / k) for generation k
 
 All movement and mechanics rules apply identically to both main grid and subgrids 
 unless explicitly stated otherwise.
@@ -139,9 +138,9 @@ Periodic teleportation:
 - Does NOT reset the anti-backtracking memory
 - Counts as a move
 - Is mandatory and automatic
-
+- If all moves have already been teleported to, nothing happens(THE GAME DOES NOT END)
 ### Teleport Usage Limit
-Each cell can be teleported TO a maximum of n times (across all teleport types).
+Each cell can be teleported TO a maximum of 2^n times (across all teleport types).
 Once a cell has been the destination of n teleports, it cannot be teleported to again.
 
 ---
@@ -195,7 +194,7 @@ To spawn a subgrid from cell c in grid G, ALL of the following must be satisfied
    The grid G must have ordinal rank R_G > 0.
 
 5. CONCURRENCY LIMIT
-   The total number of active grids must be less than L = n^2 + 1.
+   The total number of active grids must be less than L = n^4.
    If the limit is reached, spawning is blocked until other grids terminate.
 
 ### Subgrid Creation Process
@@ -340,9 +339,6 @@ Subgrids can spawn their own child subgrids if:
 
 This creates a recursive tree structure of grids, limited by:
 - Ordinal rank descent (guarantees termination)
-- Generation cap: floor(n² / k) for generation k
-- Concurrency limit: maximum n² + 1 active grids
-
 ---
 
 ## 13. TERMINATION CONDITIONS
