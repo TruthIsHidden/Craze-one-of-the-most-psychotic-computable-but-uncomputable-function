@@ -31,7 +31,7 @@ A token (player position) begins on any chosen starting cell.
 - Pump period (main grid) = every n moves
 - Pump period (subgrid generation k) = every floor(n / k) moves (if ≥ 1)
 - Anti-backtrack window = last floor(N_G / 2) distinct visited cells
-- No Concurrency limit limit at a particular point in time.
+- No Concurrency  limit at a particular point in time(“There is no maximum number of simultaneously active subgrids, infinitely can exist.”)
 - Spawn cost = 1 escape token
 - Value wrapping = modulo (n+1), values cycle through {0, 1, 2, ..., n}
 - Every time where its said "a" subgrid is formed it means 2n^2 subgrids are formed, the only thing is, all the "n" formed subgrids have the same ordinal rank.
@@ -141,8 +141,8 @@ Periodic teleportation:
 - Is mandatory and automatic
 - If all moves have already been teleported to, nothing happens(THE GAME DOES NOT END)
 ### Teleport Usage Limit
-Each cell can be teleported TO a maximum of 2^n times (across all teleport types).
-Once a cell has been the destination of n teleports, it cannot be teleported to again.
+Each cell can be teleported TO a maximum of 2^2n times (across all teleport types).
+Once a cell has been the destination of 2^2n teleports, it cannot be teleported to again.
 
 ---
 
@@ -199,7 +199,7 @@ To spawn a subgrid from cell c in grid G, ALL of the following must be satisfied
 When all requirements are met and the spawn is triggered:
 
 1. Create new subgrid H with:
-   - Side length = n^4n
+   - Side length = n^3n
    - Total cells = n^6n
    - All cell values initialized to 0
    - Token starts at a chosen cell
@@ -395,7 +395,7 @@ S_total = sum of all cell values across ALL grids at termination
 The final output of CRAZE-ULTIMATE(n) is:
 
   G(n) = ((POSSIBLE) ^ ((S_Total + M_Total)!)),
-  CRAZE-ULTIMATE(n) or OZ(n) is G(G(G(..G(n)..) n^2 times.. so if n is 2, OZ(2) = G(G(2)).
+  CRAZE-ULTIMATE(n) or OZ(n) is G(G(G(..G(n)..) n^2 times.. so if n is 2, OZ(2) = G(G(G(G(2)))) {4 times, as 2^2 = 4}.
 
 Where:
 - ^ denotes exponentiation
