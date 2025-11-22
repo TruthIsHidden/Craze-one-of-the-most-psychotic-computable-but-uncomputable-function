@@ -34,7 +34,7 @@ A token (player position) begins on any chosen starting cell.
 - No Concurrency limit limit at a particular point in time.
 - Spawn cost = 1 escape token
 - Value wrapping = modulo (n+1), values cycle through {0, 1, 2, ..., n}
-- Every time where its said "a" subgrid is formed it means n^2 subgrids are formed, the only thing is, all the "n" formed subgrids have the same ordinal rank.
+- Every time where its said "a" subgrid is formed it means 2n^2 subgrids are formed, the only thing is, all the "n" formed subgrids have the same ordinal rank.
 
 All movement and mechanics rules apply identically to both main grid and subgrids 
 unless explicitly stated otherwise.
@@ -194,10 +194,6 @@ To spawn a subgrid from cell c in grid G, ALL of the following must be satisfied
 4. RANK REQUIREMENT
    The grid G must have ordinal rank R_G > 0.
 
-5. CONCURRENCY LIMIT
-   The total number of active grids must be less than L = n^4.
-   If the limit is reached, spawning is blocked until other grids terminate.
-
 ### Subgrid Creation Process
 
 When all requirements are met and the spawn is triggered:
@@ -235,7 +231,7 @@ Each cell can produce multiple subgrids if the requirements are met repeatedly.
 The system uses ordinal ranks based on Jäger-Pohlers θ-collapse notation to ensure 
 termination. The ordinals reach up to:
 
-  ψ(Ω^(Ω^(Ω^...)))  with tower height = n^2
+  ψ(Ω^(Ω^(Ω^...)))  with tower height = n^4
 
 This places CRAZE-ULTIMATE in the Bachmann-Howard ordinal range, giving it 
 extraordinary proof-theoretic strength while remaining fully computable.
